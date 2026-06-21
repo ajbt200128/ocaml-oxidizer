@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 ocaml = "1"
+ocaml-boxroot-sys = "0.4" # to start the runtime with custom argv (Sys.argv)
 clap = { version = "4", features = ["derive"] }
 # rustls-tls pulls the ring provider in reqwest 0.12 with no extra config.
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "blocking"], optional = true }

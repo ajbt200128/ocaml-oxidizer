@@ -5,11 +5,14 @@ use std::process::ExitCode;
 #[derive(Parser)]
 #[command(name = "ocaml-oxidizer", version)]
 struct Cli {
-    /// Path to the .ml file.
-    file: std::path::PathBuf,
     /// Type-check the script without running it.
     #[arg(long)]
     check: bool,
+    /// Path to the .ml file.
+    file: std::path::PathBuf,
+    /// Arguments passed to the script as Sys.argv.
+    #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+    args: Vec<String>,
 }
 
 fn main() -> ExitCode {
@@ -23,8 +26,11 @@ fn main() -> ExitCode {
         }
     };
 
-    let interp = ocaml_oxidizer::Interp::new();
     let name = cli.file.display().to_string();
+    let mut argv = vec![name.clone()];
+    argv.extend(cli.args.iter().cloned());
+
+    let interp = ocaml_oxidizer::Interp::with_args(&argv);
     let result = if cli.check {
         interp.check(&name, &src)
     } else {

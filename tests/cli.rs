@@ -125,6 +125,14 @@ fn check_does_not_execute() {
 }
 
 #[test]
+fn script_args_become_argv() {
+    let p = script("argv", "let () = print_string (String.concat \",\" (Array.to_list Sys.argv))");
+    let o = run(&[p.to_str().unwrap(), "a", "b"], "");
+    assert_eq!(o.code, 0);
+    assert!(o.stdout.ends_with(",a,b"), "{:?}", o.stdout);
+}
+
+#[test]
 fn runtime_exception_exits_nonzero() {
     let o = run_file("exn", "let () = failwith \"boom\"", "");
     assert_ne!(o.code, 0);
