@@ -1,0 +1,14 @@
+[package]
+name = "ocaml-oxidizer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ocaml = "1"
+clap = { version = "4", features = ["derive"] }
+# rustls-tls pulls the ring provider in reqwest 0.12 with no extra config.
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "blocking"], optional = true }
+
+[features]
+default = []
+networking = ["dep:reqwest"]
