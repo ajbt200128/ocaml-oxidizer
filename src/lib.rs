@@ -8,7 +8,8 @@ use ocaml::Runtime;
 
 ocaml::import! {
     fn ox_init(cmis: &[u8]);
-    fn eval_source(src: String) -> bool;
+    fn eval_source(filename: String, src: String) -> bool;
+    fn check_source(filename: String, src: String) -> bool;
     fn eval_string(src: String) -> isize;
 }
 
@@ -27,15 +28,27 @@ impl Interp {
         Interp { rt }
     }
 
-    /// Run OCaml source as one implementation. Returns `false` if a phrase
-    /// failed; the interpreter reports the error to stderr itself.
-    pub fn run(&self, src: &str) -> Result<bool, ocaml::Error> {
-        unsafe { eval_source(&self.rt, src.to_string()) }
+    /// Run OCaml source as one implementation. `filename` tags error locations.
+    /// Returns `false` if a phrase failed; errors are reported to stderr.
+    pub fn run(&self, filename: &str, src: &str) -> Result<bool, ocaml::Error> {
+        unsafe { eval_source(&self.rt, filename.to_string(), src.to_string()) }
+    }
+
+    /// Typecheck OCaml source without running it. Returns `false` on a type error.
+    pub fn check(&self, filename: &str, src: &str) -> Result<bool, ocaml::Error> {
+        unsafe { check_source(&self.rt, filename.to_string(), src.to_string()) }
     }
 
     /// Evaluate an int-typed expression and return its value (test helper).
     pub fn eval_int(&self, src: &str) -> Result<isize, ocaml::Error> {
         unsafe { eval_string(&self.rt, src.to_string()) }
+    }
+
+    /// Call an OCaml `int -> int` function registered with `Callback.register`.
+    pub fn call_int(&self, name: &str, arg: isize) -> Result<isize, ocaml::Error> {
+        let f = unsafe { ocaml::Value::named(name) }
+            .ok_or(ocaml::Error::Message("function not registered"))?;
+        unsafe { f.call(&self.rt, [arg]) }
     }
 }
 
