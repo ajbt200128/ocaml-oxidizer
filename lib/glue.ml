@@ -8,6 +8,8 @@ let report exn =
 
 (* The host owns process exit, so OCaml's at_exit never flushes its channels. *)
 let flush_io () =
+  Format.pp_print_flush Format.std_formatter ();
+  Format.pp_print_flush Format.err_formatter ();
   flush stdout;
   flush stderr
 
@@ -21,6 +23,11 @@ let lexbuf_of fname src =
   lb
 
 let initialized = ref false
+
+(* A host (Rust) function. The compile-time external forces the primitive into
+   the bytecode primitive table; ox_init then binds it into the toplevel env. *)
+external ox_double : int -> int = "ox_double"
+let () = ignore ox_double
 
 let ox_init (blob : string) : unit =
   if not !initialized then begin
@@ -39,15 +46,25 @@ let ox_init (blob : string) : unit =
     Clflags.no_std_include := true;
     Toploop.set_paths ();
     Toploop.initialize_toplevel_env ();
+    (* Expose host functions to scripts. *)
+    (try
+       ignore
+         (Toploop.execute_phrase false Format.std_formatter
+            (Parsetree.Ptop_def
+               (Parse.implementation
+                  (Lexing.from_string
+                     "external ox_double : int -> int = \"ox_double\""))))
+     with exn -> report exn);
     initialized := true
   end
 
 (* Run a whole .ml source (an implementation structure) as one phrase. *)
 let eval_source (fname : string) (src : string) : bool =
   let lb = lexbuf_of fname src in
+  (* err_formatter so toplevel-printed exceptions land on stderr. *)
   let ok =
     try
-      Toploop.execute_phrase false Format.std_formatter
+      Toploop.execute_phrase false Format.err_formatter
         (Parsetree.Ptop_def (Parse.implementation lb))
     with exn ->
       report exn;

@@ -15,6 +15,13 @@ ocaml::import! {
 
 static CMIS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/cmis.bin"));
 
+/// A host (Rust) function exposed to evaluated OCaml as `ox_double : int -> int`.
+/// The glue binds it into the toplevel env at startup (see lib/glue.ml).
+#[ocaml::func]
+pub fn ox_double(x: isize) -> isize {
+    x * 2
+}
+
 /// A live embedded OCaml interpreter. The runtime is a process-global singleton,
 /// so repeated construction is idempotent.
 pub struct Interp {
