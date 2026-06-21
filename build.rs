@@ -39,21 +39,21 @@ fn main() {
     // -output-complete-obj bakes the bytecode toplevel + stdlib + unix + runtime
     // into one object; -linkall keeps glue's Callback.register initializers.
     let glue_obj = out_dir.join("glue.o");
-    run(
-        Command::new("ocamlfind")
-            .args([
-                "ocamlc",
-                "-package",
-                "compiler-libs.toplevel,unix",
-                "-linkpkg",
-                "-linkall",
-                "-output-complete-obj",
-            ])
-            .arg("lib/glue.ml")
-            .arg("-o")
-            .arg(&glue_obj),
-        "ocamlc glue",
-    );
+    let mut cmd = Command::new("ocamlfind");
+    cmd.args([
+        "ocamlc",
+        "-package",
+        "compiler-libs.toplevel,unix",
+        "-linkpkg",
+        "-linkall",
+        "-output-complete-obj",
+    ]);
+    // net.ml's externals resolve to the Rust networking primitives at final link.
+    if env::var("CARGO_FEATURE_NETWORKING").is_ok() {
+        cmd.arg("lib/net.ml");
+    }
+    cmd.arg("lib/glue.ml").arg("-o").arg(&glue_obj);
+    run(&mut cmd, "ocamlc glue");
 
     // whole-archive forces the object in (nothing references it at link time) and
     // places it before libc, so its libc/libm refs resolve (GNU ld is order-sensitive).
@@ -68,7 +68,9 @@ fn main() {
     println!("cargo:rustc-link-lib=pthread");
 
     println!("cargo:rerun-if-changed=lib/glue.ml");
+    println!("cargo:rerun-if-changed=lib/net.ml");
     println!("cargo:rerun-if-changed=lib/make_cmis.ml");
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-env-changed=OCAML_WHERE_PATH");
+    println!("cargo:rerun-if-env-changed=CARGO_FEATURE_NETWORKING");
 }

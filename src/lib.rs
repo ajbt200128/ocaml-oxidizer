@@ -6,11 +6,19 @@
 
 use ocaml::Runtime;
 
+#[cfg(feature = "networking")]
+mod networking;
+
 ocaml::import! {
     fn ox_init(cmis: &[u8]);
     fn eval_source(filename: String, src: String) -> bool;
     fn check_source(filename: String, src: String) -> bool;
     fn eval_string(src: String) -> isize;
+}
+
+#[cfg(feature = "networking")]
+ocaml::import! {
+    fn ox_bind_net() -> bool;
 }
 
 static CMIS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/cmis.bin"));
@@ -32,6 +40,10 @@ impl Interp {
     pub fn new() -> Self {
         let rt = ocaml::runtime::init();
         unsafe { ox_init(&rt, CMIS).expect("ox_init") };
+        #[cfg(feature = "networking")]
+        unsafe {
+            let _ = ox_bind_net(&rt);
+        }
         Interp { rt }
     }
 
