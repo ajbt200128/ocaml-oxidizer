@@ -15,8 +15,8 @@ Installs the latest release into `~/.local/bin`.
 ## Usage
 
 ```sh
-ocaml-oxidizer script.ml          # run a script
-ocaml-oxidizer --check script.ml  # typecheck only (pretty errors)
+ox script.ml          # run a script
+ox --check script.ml  # typecheck only (pretty errors)
 ```
 
 Scripts get the full stdlib and Unix: stdout/stderr, stdin, process exec,
@@ -53,14 +53,14 @@ docker build -f docker/Dockerfile.alpine -t ocaml-oxidizer .
 
 ```yaml
 - uses: ajbt200128/ocaml-oxidizer@main   # optionally: with: { version: v0.1.0 }
-- run: ocaml-oxidizer script.ml
+- run: ox script.ml
 ```
 
 ## Release tooling
 
-The release tooling is itself OCaml, run by ocaml-oxidizer:
+The release tooling is itself OCaml, run by ox:
 
-- `ocaml-oxidizer scripts/bump_version.ml <major> <minor> <patch> <expected-current>`
+- `ox scripts/bump_version.ml <major> <minor> <patch> <expected-current>`
   — bump the version and open a PR.
-- `ocaml-oxidizer scripts/release.ml <commit>` — tag `v<version>` (immutable) and
+- `ox scripts/release.ml <commit>` — tag `v<version>` (immutable) and
   attach the binaries CI already built for that commit; no separate release build.

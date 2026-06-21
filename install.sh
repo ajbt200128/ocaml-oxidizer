@@ -17,7 +17,7 @@ case "$arch" in
   arm64 | aarch64) arch=aarch64 ;;
   *) echo "unsupported arch: $arch" >&2; exit 1 ;;
 esac
-asset="ocaml-oxidizer-${os}-${arch}"
+asset="ox-${os}-${arch}"
 
 tag=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
   | grep '"tag_name"' | head -1 | cut -d'"' -f4)
@@ -31,9 +31,9 @@ dest="${HOME}/.local/bin"
 mkdir -p "$dest"
 
 echo "downloading ${asset} (${tag})..."
-curl -fsSL "$url" -o "${dest}/ocaml-oxidizer"
-chmod +x "${dest}/ocaml-oxidizer"
-echo "installed ${tag} -> ${dest}/ocaml-oxidizer"
+curl -fsSL "$url" -o "${dest}/ox"
+chmod +x "${dest}/ox"
+echo "installed ${tag} -> ${dest}/ox"
 
 case ":${PATH}:" in
   *":${dest}:"*) ;;

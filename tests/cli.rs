@@ -5,7 +5,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
-const BIN: &str = env!("CARGO_BIN_EXE_ocaml-oxidizer");
+const BIN: &str = env!("CARGO_BIN_EXE_ox");
 
 struct Output {
     stdout: String,
@@ -20,7 +20,7 @@ fn run(args: &[&str], stdin: &str) -> Output {
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
-        .expect("spawn ocaml-oxidizer");
+        .expect("spawn ox");
     child.stdin.take().unwrap().write_all(stdin.as_bytes()).unwrap();
     let out = child.wait_with_output().unwrap();
     Output {

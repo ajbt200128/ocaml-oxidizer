@@ -1,5 +1,5 @@
 (* Bump the crate version and open a PR. Run with:
-   ocaml-oxidizer scripts/bump_version.ml <major> <minor> <patch> <expected-current>
+   ox scripts/bump_version.ml <major> <minor> <patch> <expected-current>
 
    The expected-current argument is a safety check: the bump aborts unless the
    crate is currently at that version. *)

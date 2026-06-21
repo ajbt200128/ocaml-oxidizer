@@ -15,14 +15,14 @@ COPY --chown=opam:opam . .
 RUN eval $(opam env) \
  && export OCAML_WHERE_PATH="$(ocamlc -where)" OCAML_VERSION="$(ocamlc -version)" \
  && cargo test --all-features \
- && cargo rustc --release --features networking --bin ocaml-oxidizer -- -C target-feature=+crt-static
-RUN echo "=== static check ===" && file target/release/ocaml-oxidizer \
- && (ldd target/release/ocaml-oxidizer || true)
+ && cargo rustc --release --features networking --bin ox -- -C target-feature=+crt-static
+RUN echo "=== static check ===" && file target/release/ox \
+ && (ldd target/release/ox || true)
 
 # Run on bare Alpine with NO OCaml installed: proves self-containment.
 FROM alpine:3.22
-COPY --from=build /src/target/release/ocaml-oxidizer /usr/local/bin/ocaml-oxidizer
+COPY --from=build /src/target/release/ox /usr/local/bin/ox
 COPY --from=build /src/examples /examples
-RUN ocaml-oxidizer /examples/hello.ml
+RUN ox /examples/hello.ml
 RUN printf 'let () = Printf.printf "ppid=%%d sum=%%d\\n" (Unix.getppid ()) (List.fold_left (+) 0 [1;2;3;4])\n' > /t.ml \
- && ocaml-oxidizer /t.ml
+ && ox /t.ml

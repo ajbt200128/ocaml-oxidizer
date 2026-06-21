@@ -1,5 +1,5 @@
 (* Cut an immutable release for a commit, reusing the binaries CI already built.
-   Run with: ocaml-oxidizer scripts/release.ml <commit>
+   Run with: ox scripts/release.ml <commit>
 
    Tags v<version-at-commit>, fails if that tag exists, and attaches the CI
    artifacts for that exact commit. There is no separate release build. *)
@@ -57,7 +57,7 @@ let () =
 
   let tmp = capture "mktemp -d" in
   run (Printf.sprintf "gh run download %s --dir %s" run_id tmp);
-  let assets = capture (Printf.sprintf "find %s -type f -name 'ocaml-oxidizer-*'" tmp) in
+  let assets = capture (Printf.sprintf "find %s -type f -name 'ox-*'" tmp) in
   if assets = "" then die ("no release binaries among CI artifacts for " ^ sha);
   let files = String.split_on_char '\n' assets in
   List.iter (fun f -> run ("chmod +x " ^ f)) files;

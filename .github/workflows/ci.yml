@@ -20,11 +20,11 @@ jobs:
       - name: Stage binary
         run: |
           mkdir -p dist
-          cp target/release/ocaml-oxidizer dist/ocaml-oxidizer-macos-aarch64
+          cp target/release/ox dist/ox-macos-aarch64
       - uses: actions/upload-artifact@v4
         with:
-          name: ocaml-oxidizer-macos-aarch64
-          path: dist/ocaml-oxidizer-macos-aarch64
+          name: ox-macos-aarch64
+          path: dist/ox-macos-aarch64
           if-no-files-found: error
 
   linux:
@@ -40,10 +40,10 @@ jobs:
           docker build --platform=linux/amd64 -f docker/Dockerfile.alpine --target build -t ox-build .
           mkdir -p dist
           id=$(docker create ox-build)
-          docker cp "$id:/src/target/release/ocaml-oxidizer" dist/ocaml-oxidizer-linux-x86_64
+          docker cp "$id:/src/target/release/ox" dist/ox-linux-x86_64
           docker rm "$id"
       - uses: actions/upload-artifact@v4
         with:
-          name: ocaml-oxidizer-linux-x86_64
-          path: dist/ocaml-oxidizer-linux-x86_64
+          name: ox-linux-x86_64
+          path: dist/ox-linux-x86_64
           if-no-files-found: error

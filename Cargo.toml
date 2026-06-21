@@ -3,6 +3,10 @@ name = "ocaml-oxidizer"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "ox"
+path = "src/main.rs"
+
 [dependencies]
 ocaml = "1"
 ocaml-boxroot-sys = "0.4" # to start the runtime with custom argv (Sys.argv)

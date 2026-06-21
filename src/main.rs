@@ -3,7 +3,7 @@ use std::process::ExitCode;
 
 /// Run an OCaml script in an embedded, self-contained bytecode interpreter.
 #[derive(Parser)]
-#[command(name = "ocaml-oxidizer", version)]
+#[command(name = "ox", version)]
 struct Cli {
     /// Type-check the script without running it.
     #[arg(long)]
@@ -21,7 +21,7 @@ fn main() -> ExitCode {
     let src = match std::fs::read_to_string(&cli.file) {
         Ok(s) => s,
         Err(e) => {
-            eprintln!("ocaml-oxidizer: cannot read {}: {e}", cli.file.display());
+            eprintln!("ox: cannot read {}: {e}", cli.file.display());
             return ExitCode::FAILURE;
         }
     };
@@ -41,7 +41,7 @@ fn main() -> ExitCode {
         Ok(true) => ExitCode::SUCCESS,
         Ok(false) => ExitCode::FAILURE,
         Err(e) => {
-            eprintln!("ocaml-oxidizer: {e:?}");
+            eprintln!("ox: {e:?}");
             ExitCode::FAILURE
         }
     }

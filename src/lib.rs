@@ -59,7 +59,7 @@ pub struct Interp {
 
 impl Interp {
     pub fn new() -> Self {
-        Self::with_args(&["ocaml-oxidizer".to_string()])
+        Self::with_args(&["ox".to_string()])
     }
 
     /// Construct an interpreter whose scripts see `args` as `Sys.argv`.
