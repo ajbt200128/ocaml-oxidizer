@@ -1,0 +1,26 @@
+# syntax=docker/dockerfile:1
+# Fully static x86_64 Linux binary, verified self-contained on bare Alpine.
+# Alpine apk only ships OCaml 4.14, so we build on ocaml/opam (prebuilt 5.4
+# switch, same musl base); 3.22 carries rust 1.87 (clap needs edition2024).
+FROM ocaml/opam:alpine-3.22-ocaml-5.4 AS build
+USER root
+RUN apk add --no-cache rust cargo musl-dev gcc
+USER opam
+RUN opam install -y dune ocamlfind
+WORKDIR /src
+COPY --chown=opam:opam . .
+# `cargo rustc -- <flag>` applies crt-static to only the leaf binary, so host
+# proc-macros (which cannot be static) still build dynamically.
+RUN eval $(opam env) \
+ && export OCAML_WHERE_PATH="$(ocamlc -where)" OCAML_VERSION="$(ocamlc -version)" \
+ && cargo rustc --release --bin ocaml-oxidizer -- -C target-feature=+crt-static
+RUN echo "=== static check ===" && file target/release/ocaml-oxidizer \
+ && (ldd target/release/ocaml-oxidizer || true)
+
+# Run on bare Alpine with NO OCaml installed: proves self-containment.
+FROM alpine:3.22
+COPY --from=build /src/target/release/ocaml-oxidizer /usr/local/bin/ocaml-oxidizer
+COPY --from=build /src/examples /examples
+RUN ocaml-oxidizer /examples/hello.ml
+RUN printf 'let () = Printf.printf "ppid=%%d sum=%%d\\n" (Unix.getppid ()) (List.fold_left (+) 0 [1;2;3;4])\n' > /t.ml \
+ && ocaml-oxidizer /t.ml
