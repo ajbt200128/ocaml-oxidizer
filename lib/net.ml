@@ -5,14 +5,16 @@
 external ox_http_get : string -> string = "ox_http_get"
 external ox_http_status : string -> int = "ox_http_status"
 external ox_load_remote : string -> bool = "ox_load_remote"
+external ox_http_req : string -> string -> string -> string -> string = "ox_http_req"
 
-let () = ignore (ox_http_get, ox_http_status, ox_load_remote)
+let () = ignore (ox_http_get, ox_http_status, ox_load_remote, ox_http_req)
 
 let bind () =
   let phrase =
     "external http_get : string -> string = \"ox_http_get\"\n\
      external http_status : string -> int = \"ox_http_status\"\n\
-     external load_remote : string -> bool = \"ox_load_remote\""
+     external load_remote : string -> bool = \"ox_load_remote\"\n\
+     external http_req : string -> string -> string -> string -> string = \"ox_http_req\""
   in
   try
     ignore

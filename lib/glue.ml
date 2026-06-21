@@ -24,10 +24,12 @@ let lexbuf_of fname src =
 
 let initialized = ref false
 
-(* A host (Rust) function. The compile-time external forces the primitive into
-   the bytecode primitive table; ox_init then binds it into the toplevel env. *)
-external ox_double : int -> int = "ox_double"
-let () = ignore ox_double
+(* Host (Rust) metadata functions. The compile-time externals force the
+   primitives into the bytecode primitive table; ox_init then binds them into the
+   toplevel env so scripts can call them. *)
+external ox_version : unit -> string = "ox_version"
+external ox_features : unit -> string = "ox_features"
+let () = ignore (ox_version, ox_features)
 
 let ox_init (blob : string) : unit =
   if not !initialized then begin
@@ -53,19 +55,25 @@ let ox_init (blob : string) : unit =
             (Parsetree.Ptop_def
                (Parse.implementation
                   (Lexing.from_string
-                     "external ox_double : int -> int = \"ox_double\""))))
+                     "external ox_version : unit -> string = \"ox_version\"\n\
+                      external ox_features : unit -> string = \"ox_features\""))))
      with exn -> report exn);
     initialized := true
   end
 
-(* Run a whole .ml source (an implementation structure) as one phrase. *)
+(* Parse the whole .ml up front (no `;;` needed), then type-check and run each
+   top-level item as its own phrase. Doing them one at a time means definitions an
+   earlier item injects into the toplevel env — e.g. via [load_remote] — are in
+   scope when later items are type-checked. Stops at the first failing item. *)
 let eval_source (fname : string) (src : string) : bool =
   let lb = lexbuf_of fname src in
   (* err_formatter so toplevel-printed exceptions land on stderr. *)
   let ok =
     try
-      Toploop.execute_phrase false Format.err_formatter
-        (Parsetree.Ptop_def (Parse.implementation lb))
+      List.for_all
+        (fun item ->
+          Toploop.execute_phrase false Format.err_formatter (Parsetree.Ptop_def [ item ]))
+        (Parse.implementation lb)
     with exn ->
       report exn;
       false

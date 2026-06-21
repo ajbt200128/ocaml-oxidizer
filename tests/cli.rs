@@ -91,10 +91,17 @@ fn domains_work() {
 }
 
 #[test]
-fn host_function_callable() {
-    let o = run_file("hostfn", "let () = Printf.printf \"double:%d\" (ox_double 21)", "");
+fn host_metadata_callable() {
+    let o = run_file(
+        "hostfn",
+        "let () = Printf.printf \"v=%s feats=%s\" (ox_version ()) (ox_features ())",
+        "",
+    );
     assert_eq!(o.code, 0);
-    assert!(o.stdout.contains("double:42"), "{:?}", o.stdout);
+    assert!(o.stdout.contains(&format!("v={}", env!("CARGO_PKG_VERSION"))), "{:?}", o.stdout);
+    if cfg!(feature = "networking") {
+        assert!(o.stdout.contains("networking"), "{:?}", o.stdout);
+    }
 }
 
 #[test]

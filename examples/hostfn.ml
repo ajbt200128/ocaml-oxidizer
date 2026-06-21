@@ -1,2 +1,2 @@
-(* ox_double is a Rust function bound into the interpreter at startup. *)
-let () = Printf.printf "ox_double 21 = %d\n" (ox_double 21)
+(* ox exposes metadata about itself as host (Rust) functions bound at startup. *)
+let () = Printf.printf "ox %s (features: %s)\n" (ox_version ()) (ox_features ())

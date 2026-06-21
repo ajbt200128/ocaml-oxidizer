@@ -23,11 +23,22 @@ ocaml::import! {
 
 static CMIS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/cmis.bin"));
 
-/// A host (Rust) function exposed to evaluated OCaml as `ox_double : int -> int`.
-/// The glue binds it into the toplevel env at startup (see lib/glue.ml).
+/// Host (Rust) functions exposing ox metadata to evaluated OCaml as
+/// `ox_version : unit -> string` and `ox_features : unit -> string` (a
+/// comma-separated list of enabled cargo features). The glue binds them into the
+/// toplevel env at startup (see lib/glue.ml).
 #[ocaml::func]
-pub fn ox_double(x: isize) -> isize {
-    x * 2
+pub fn ox_version(_unit: ()) -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}
+
+#[ocaml::func]
+pub fn ox_features(_unit: ()) -> String {
+    let mut features: Vec<&str> = Vec::new();
+    if cfg!(feature = "networking") {
+        features.push("networking");
+    }
+    features.join(",")
 }
 
 /// Start the runtime once with `args` as the OCaml `Sys.argv`. Replicates

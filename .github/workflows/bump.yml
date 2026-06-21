@@ -1,0 +1,33 @@
+name: bump
+
+# Manually bump the crate version and open a PR. Dogfoods the action: it installs
+# `ox` from the latest release, then runs the OCaml bump script with it.
+on:
+  workflow_dispatch:
+    inputs:
+      level:
+        description: Which version component to bump
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+        required: true
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - uses: ./ # dogfood: install `ox` from the latest release
+      - name: Bump version and open PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          current=$(grep -m1 '^version = ' Cargo.toml | cut -d'"' -f2)
+          ox scripts/bump_version.ml "${{ inputs.level }}" "$current"

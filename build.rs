@@ -24,15 +24,17 @@ fn main() {
         env::var("OCAML_WHERE_PATH").expect("OCAML_WHERE_PATH not set (run in `devenv shell`)");
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 
-    // Bundle stdlib + unix .cmi into cmis.bin for self-contained typechecking.
+    // Bundle stdlib + unix + str .cmi into cmis.bin for self-contained typechecking.
     let cmis_bin = out_dir.join("cmis.bin");
     let unix_dir = ocamlfind_query("unix");
+    let str_dir = ocamlfind_query("str");
     run(
         Command::new("ocaml")
             .arg("lib/make_cmis.ml")
             .arg(&cmis_bin)
             .arg(&where_path)
-            .arg(&unix_dir),
+            .arg(&unix_dir)
+            .arg(&str_dir),
         "make_cmis",
     );
 
@@ -43,7 +45,7 @@ fn main() {
     cmd.args([
         "ocamlc",
         "-package",
-        "compiler-libs.toplevel,unix",
+        "compiler-libs.toplevel,unix,str",
         "-linkpkg",
         "-linkall",
         "-output-complete-obj",
