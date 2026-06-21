@@ -72,6 +72,8 @@ let eval_source (fname : string) (src : string) : bool =
     try
       List.for_all
         (fun item ->
+          Location.input_name := fname;
+          Location.input_lexbuf := Some lb;
           Toploop.execute_phrase false Format.err_formatter (Parsetree.Ptop_def [ item ]))
         (Parse.implementation lb)
     with exn ->

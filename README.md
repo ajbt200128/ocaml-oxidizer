@@ -22,9 +22,9 @@ ox --check script.ml  # typecheck only (pretty errors)
 
 Scripts get the full stdlib, Unix, and Str: stdout/stderr, stdin, process exec,
 effects and domains, and `Callback.register`. Two host functions report ox's own
-metadata: `ox_version ()` and `ox_features ()`. Built with the `networking`
-feature, scripts also get `http_get`, `http_status`, `http_req`, and
-`load_remote` (fetch and evaluate a remote `.ml`).
+metadata: `ox_version ()` and `ox_features ()`. Networking is on by default, so
+scripts also get `http_get`, `http_status`, `http_req`, and `load_remote` (fetch
+and evaluate a remote `.ml`); build `--no-default-features` to drop it.
 
 A script is evaluated one top-level item at a time, so definitions pulled in by an
 early `load_remote` are in scope for the items that follow — which is what makes
@@ -43,9 +43,9 @@ let m = interp.call_int("inc", 41)?;                     // 42
 ## Build from source
 
 ```sh
-devenv shell                                  # OCaml 5.4 + Rust toolchain
-cargo build --release --features networking
-cargo test --all-features
+devenv shell              # OCaml 5.4 + Rust toolchain
+cargo build --release     # networking is on by default; --no-default-features drops it
+cargo test
 ```
 
 A fully static Linux (musl) binary builds via the provided image, which also
@@ -80,8 +80,8 @@ let body = get ~headers:[ ("Accept", "text/plain") ] "https://example.com"
 
 It pulls `Printf`/`Str` helpers (`sprintf`, `split`, `replace`, `matches`, …) and
 shell-like commands (`run`, `capture`, `cd`, `ls`, `rm`, `mv`, `mkdir`, `which`,
-`get`/`post`/`put`, …) plus `input`, `env`, and `args` into scope. Requires the
-`networking` feature (which `load_remote` itself needs).
+`get`/`post`/`put`, …) plus `input`, `env`, and `args` into scope. Needs
+networking (on by default — `load_remote` itself needs it).
 
 ## Release tooling
 
