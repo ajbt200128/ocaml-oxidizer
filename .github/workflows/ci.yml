@@ -1,0 +1,49 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  macos:
+    runs-on: macos-latest # arm64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - name: Install devenv
+        run: nix profile install nixpkgs#devenv
+      - name: Test (stress suite, all features)
+        run: devenv shell -- cargo test --all-features
+      - name: Build release CLI
+        run: devenv shell -- cargo build --release --features networking
+      - name: Stage binary
+        run: |
+          mkdir -p dist
+          cp target/release/ocaml-oxidizer dist/ocaml-oxidizer-macos-aarch64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ocaml-oxidizer-macos-aarch64
+          path: dist/ocaml-oxidizer-macos-aarch64
+          if-no-files-found: error
+
+  linux:
+    runs-on: ubuntu-latest # x86_64
+    steps:
+      - uses: actions/checkout@v4
+      # The provided image builds the static binary AND runs the stress suite,
+      # then proves self-containment on bare Alpine.
+      - name: Build + test in Docker image
+        run: docker build --platform=linux/amd64 -f docker/Dockerfile.alpine -t ox-full .
+      - name: Tag build stage (cached) and extract binary
+        run: |
+          docker build --platform=linux/amd64 -f docker/Dockerfile.alpine --target build -t ox-build .
+          mkdir -p dist
+          id=$(docker create ox-build)
+          docker cp "$id:/src/target/release/ocaml-oxidizer" dist/ocaml-oxidizer-linux-x86_64
+          docker rm "$id"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ocaml-oxidizer-linux-x86_64
+          path: dist/ocaml-oxidizer-linux-x86_64
+          if-no-files-found: error
