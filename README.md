@@ -1,18 +1,57 @@
 # ocaml-oxidizer
 
-A Rust crate + CLI embedding a self-contained OCaml 5.4 bytecode interpreter.
-Pass it OCaml source, it evaluates and returns a value. No external OCaml install
-required at runtime: the bytecode runtime is statically linked and the stdlib is
-bundled into the binary.
+A Rust crate + CLI that embeds a self-contained OCaml 5.4 bytecode interpreter.
+The bytecode runtime, stdlib, and Unix are statically linked, and the stdlib/unix
+`.cmi` files are bundled into the binary — no OCaml install is needed at runtime.
 
-## Develop
+## Install
 
 ```sh
-devenv shell                       # OCaml 5.4 + Rust toolchain
-cargo run -- examples/hello.ml
+curl -fsSL https://raw.githubusercontent.com/ajbt200128/ocaml-oxidizer/main/install.sh | sh
 ```
 
-## Status
+Installs the latest release into `~/.local/bin`.
 
-Spike 0: proving a Rust host can drive the embedded bytecode `Toploop` in-process.
-See `plans/` for the roadmap (cmis bundling, CLI, stress tests, `networking` feature).
+## Usage
+
+```sh
+ocaml-oxidizer script.ml          # run a script
+ocaml-oxidizer --check script.ml  # typecheck only (pretty errors)
+```
+
+Scripts get the full stdlib and Unix: stdout/stderr, stdin, process exec,
+effects and domains, and `Callback.register`. Built with the `networking`
+feature, scripts also get `http_get`, `http_status`, and `load_remote` (fetch
+and evaluate a remote `.ml`).
+
+## Library
+
+```rust
+let interp = ocaml_oxidizer::Interp::new();
+interp.run("main.ml", "let () = print_endline \"hi\"")?;
+let n = interp.eval_int("6 * 7")?;                       // 42
+interp.run("_", "let () = Callback.register \"inc\" (fun x -> x + 1)")?;
+let m = interp.call_int("inc", 41)?;                     // 42
+```
+
+## Build from source
+
+```sh
+devenv shell                                  # OCaml 5.4 + Rust toolchain
+cargo build --release --features networking
+cargo test --all-features
+```
+
+A fully static Linux (musl) binary builds via the provided image, which also
+runs the stress suite and proves self-containment on bare Alpine:
+
+```sh
+docker build -f docker/Dockerfile.alpine -t ocaml-oxidizer .
+```
+
+## Release tooling
+
+- `scripts/bump-version.sh <major> <minor> <patch> <expected-current>` — bump the
+  version and open a PR.
+- `scripts/release.sh <commit>` — tag `v<version>` (immutable) and attach the
+  binaries CI already built for that commit; no separate release build.
