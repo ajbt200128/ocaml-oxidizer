@@ -49,9 +49,18 @@ runs the stress suite and proves self-containment on bare Alpine:
 docker build -f docker/Dockerfile.alpine -t ocaml-oxidizer .
 ```
 
+## Use in GitHub Actions
+
+```yaml
+- uses: ajbt200128/ocaml-oxidizer@main   # optionally: with: { version: v0.1.0 }
+- run: ocaml-oxidizer script.ml
+```
+
 ## Release tooling
 
-- `scripts/bump-version.sh <major> <minor> <patch> <expected-current>` — bump the
-  version and open a PR.
-- `scripts/release.sh <commit>` — tag `v<version>` (immutable) and attach the
-  binaries CI already built for that commit; no separate release build.
+The release tooling is itself OCaml, run by ocaml-oxidizer:
+
+- `ocaml-oxidizer scripts/bump_version.ml <major> <minor> <patch> <expected-current>`
+  — bump the version and open a PR.
+- `ocaml-oxidizer scripts/release.ml <commit>` — tag `v<version>` (immutable) and
+  attach the binaries CI already built for that commit; no separate release build.

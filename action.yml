@@ -1,0 +1,41 @@
+name: Setup ocaml-oxidizer
+description: Download an ocaml-oxidizer release binary and add it to PATH.
+inputs:
+  version:
+    description: Release tag (e.g. v0.1.0). Defaults to the latest release.
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        set -euo pipefail
+        repo="ajbt200128/ocaml-oxidizer"
+        version="${{ inputs.version }}"
+
+        os=$(uname -s); arch=$(uname -m)
+        case "$os" in
+          Darwin) os=macos ;;
+          Linux) os=linux ;;
+          *) echo "unsupported OS: $os" >&2; exit 1 ;;
+        esac
+        case "$arch" in
+          x86_64 | amd64) arch=x86_64 ;;
+          arm64 | aarch64) arch=aarch64 ;;
+          *) echo "unsupported arch: $arch" >&2; exit 1 ;;
+        esac
+        asset="ocaml-oxidizer-${os}-${arch}"
+
+        if [ -z "$version" ]; then
+          version=$(curl -fsSL "https://api.github.com/repos/${repo}/releases/latest" \
+            | grep '"tag_name"' | head -1 | cut -d'"' -f4)
+        fi
+
+        dest="${HOME}/.local/bin"
+        mkdir -p "$dest"
+        echo "installing ${asset} (${version})"
+        curl -fsSL "https://github.com/${repo}/releases/download/${version}/${asset}" \
+          -o "${dest}/ocaml-oxidizer"
+        chmod +x "${dest}/ocaml-oxidizer"
+        echo "$dest" >> "$GITHUB_PATH"
